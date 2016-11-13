@@ -1,0 +1,87 @@
+---
+title: "Community Health Stats"
+output: html_document
+---
+
+```{r echo = FALSE, message=F, warning=F}
+require(ggplot2)
+library(ggplot2)
+library(plyr)
+library(splines)
+require(quantmod)
+```
+
+
+```{r echo=FALSE}
+
+loginfilename <- "simyo-nl_topic_daterange_20151001_20161007_created20161008_134547.csv"
+
+p <- regexpr('[a-zA-Z]*-[a-zA-Z]{2}', loginfilename)
+d <- regexpr('[0-9]{8}_[0-9]{8}', loginfilename)
+envname <- regmatches(loginfilename, p)
+daterange <- regmatches(loginfilename, d)
+loginpath <- paste0("data/",loginfilename)
+
+```
+
+
+### Data Loaded
+```{r echo=FALSE}
+
+print(cat(paste0("Environment name: ",envname,"\n","Date range: ",daterange,"\n","\n","Login filename: ",loginfilename,"\n")))
+```
+
+```{r echo=FALSE}
+
+#read file
+dtopic <- read.csv(loginpath, stringsAsFactors=FALSE)
+
+```
+
+
+```{r echo=FALSE}
+### Step 2
+# Read creation data, and add new column, containing only month and year
+
+dtopic[ , "creation_time"] <- dtopic["date_creation"]
+dtopic$creation_time <- as.Date(dtopic$creation_time, format = "%d-%m-%Y")
+dtopic$creation_month <- strftime(dtopic$creation_time, "%Y-%m")
+
+
+```
+
+
+```{r echo=FALSE}
+### Step 3
+# Aggregate dates of the posts to do a count
+# posts 
+#daily_topicview_count <- count(dtopic, "total_views")
+#monthly_topicview_count <- count(dtopic, "creation_month")
+
+total_topicview_daily <- aggregate(total_views~creation_time,dtopic,sum)
+total_topicview_month <- aggregate(total_views~creation_month,dtopic,sum)
+names(total_topicview_month)[2] <- 'total_topicview'
+```
+
+### Number of total topic pageviews each month
+```{r echo=FALSE}
+
+avg_pageviews <- mean(total_topicview_month[["total_topicview"]])
+log_avg_pageviews <- log2(avg_pageviews)
+print(paste0("Average topic view is: ", avg_pageviews))
+print(paste0("Average topic view is (log scale): ", log_avg_pageviews))
+print(total_topicview_month)
+```
+
+```{r echo=FALSE}
+### Step 4
+#Do plot for login
+
+p <- qplot(creation_time, total_views, data=total_topicview_daily, geom=c("point", "smooth"), main="Total topic pageviews",  xlab="month", ylab="#Topic pageview (log scale)")
+p + scale_y_continuous(trans = "log")
+print(p)
+
+
+
+```
+

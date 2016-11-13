@@ -1,0 +1,129 @@
+---
+title: "Community Health Stats"
+output: html_document
+---
+
+```{r echo = FALSE, message=F, warning=F}
+require(ggplot2)
+library(ggplot2)
+library(plyr)
+library(splines)
+require(quantmod)
+```
+
+
+```{r echo=FALSE}
+
+loginfilename <- "tomtom-en_login_daterange_20150901_20161004_created20161005_224632.csv"
+
+p <- regexpr('[a-zA-Z]*-[a-zA-Z]{2}', loginfilename)
+d <- regexpr('[0-9]{8}_[0-9]{8}', loginfilename)
+envname <- regmatches(loginfilename, p)
+daterange <- regmatches(loginfilename, d)
+loginpath <- paste0("data/",loginfilename)
+
+```
+
+
+### Data Loaded
+```{r echo=FALSE}
+
+print(cat(paste0("Environment name: ",envname,"\n","Date range: ",daterange,"\n","\n","Login filename: ",loginfilename,"\n")))
+```
+
+```{r echo=FALSE}
+
+#telfort
+dlogin <- read.csv(loginpath, stringsAsFactors=FALSE)
+
+```
+
+
+```{r echo=FALSE}
+### Step 2
+# Read creation data, and add new column, containing only month and year
+
+#for login
+dlogin[ , "login_time"] <- dlogin["time"]
+dlogin$login_time <- as.Date(dlogin$login_time, format = "%d-%m-%Y")
+dlogin$month <- strftime(dlogin$login_time, "%Y-%m")
+
+
+
+```
+
+
+```{r echo=FALSE}
+### Step 3
+# Aggregate dates of the posts to do a count
+# posts 
+daily_login_count <- count(dlogin, "login_time")
+monthly_login_count <- count(dlogin, "month")
+
+```
+
+
+### Number of total logins each month
+```{r echo=FALSE}
+#posts
+monthly_login_count$monthlyDiff <- c(0, diff(monthly_login_count$freq))
+
+monthly_login_count$pctDiff <- monthly_login_count$monthlyDiff/(monthly_login_count$freq-monthly_login_count$monthlyDiff)
+monthly_login_count$pctDiff <- paste(round(100*monthly_login_count$pctDiff, 2), "%", sep="")
+
+# for presentation only
+monthly_login_count2 <- monthly_login_count
+colnames(monthly_login_count2) <- c("month", "#total login", "monthly_difference", "%growth")
+
+
+avg_reg <- mean(monthly_login_count[["freq"]])
+print(paste0("average login is: ", avg_reg))
+
+print(monthly_login_count2)
+
+```
+
+### Number of total logins each month
+```{r echo=FALSE}
+
+
+#counting registered user
+dlogin[ , "registered_user"] <- dlogin["userRole"]
+dlogin[ , "registered_user"] <- grepl(".*roles.registered.*", dlogin[ , "registered_user"],perl=TRUE)
+
+dlogin_count <- data.frame ( table ( dlogin$login_time, dlogin$registered_user ) )
+
+dlogin_count2 <- dlogin_count[dlogin_count$Var2 == TRUE, ]
+dlogin_count2$Var1 <- as.Date(dlogin_count2$Var1, format = "%Y-%m-%d")
+
+colnames(dlogin_count2) <- c("month", "# registered user", "login_freq")
+#print(head(dlogin_count2))
+
+
+#counting super user
+dlogin[ , "super_user"] <- dlogin["userRole"]
+dlogin[ , "super_user"] <- grepl(".*Super User*", dlogin[ , "super_user"],perl=TRUE)
+
+dlogin_su_count <- data.frame ( table ( dlogin$login_time, dlogin$super_user ) )
+dlogin_su_count2 <- dlogin_su_count[dlogin_su_count$Var2 == TRUE, ]
+dlogin_su_count2$Var1 <- as.Date(dlogin_su_count2$Var1, format = "%Y-%m-%d")
+
+
+
+```
+
+```{r echo=FALSE}
+### Step 4
+#Do plot for login
+
+p <- qplot(login_time, freq, data=daily_login_count, geom=c("point", "smooth"), main="#Total login",  xlab="month", ylab="#login")
+print(p)
+
+q <- qplot(month, login_freq, data=dlogin_count2, geom=c("point", "smooth"), main="#Registered User login",  xlab="month", ylab="#login")
+print(q)
+
+r <- qplot(Var1, Freq, data=dlogin_su_count2, geom=c("point", "smooth"), main="#Super User login",  xlab="month", ylab="#login")
+print(r)
+
+```
+
