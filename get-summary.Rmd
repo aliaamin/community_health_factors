@@ -154,4 +154,9 @@ print(r)
 print(summary_topics_monthly)
 #print(summary_topics_daily)
 
+#write dataframe in csv file
+outputfile <- paste0("data/",envname,"_summary_topics_monthly_",daterange,".csv")
+print(outputfile)
+write.csv(summary_topics_monthly, file = outputfile)
+
 ```
