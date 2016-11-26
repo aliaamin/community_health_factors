@@ -1,0 +1,121 @@
+---
+title: "Community Health Stats"
+output: html_document
+---
+
+```{r echo = FALSE, message=F, warning=F}
+require(ggplot2)
+library(ggplot2)
+library(plyr)
+library(splines)
+require(quantmod)
+```
+
+
+```{r echo=FALSE}
+#Read Summary
+
+filename <- "simyo-nl_topic_daterange_20151001_20161007_created20161008_134547.csv"
+typeOfAnalysis <- "Topics"
+
+
+
+p <- regexpr('[a-zA-Z]*-[a-zA-Z]{2}', filename)
+d <- regexpr('[0-9]{8}_[0-9]{8}', filename)
+envname <- regmatches(filename, p)
+daterange <- regmatches(filename, d)
+docpath <- paste0("data/",filename)
+
+
+```
+
+
+### Data Loaded
+```{r echo=FALSE}
+
+print(cat(paste0("Environment name: ",envname,"\n","Date range: ",daterange,"\n","\n","Filename: ",filename,"\n","Analysis type: ", typeOfAnalysis,"\n")))
+```
+
+```{r echo=FALSE}
+
+#read file
+df <- read.csv(docpath, stringsAsFactors=FALSE)
+
+```
+
+
+```{r echo=FALSE}
+### Step 2
+# Read creation data, and add new column, containing only month and year
+
+df[ , "creation_time"] <- df["date_creation"]
+df$creation_time <- as.Date(df$creation_time, format = "%d-%m-%Y")
+df$creation_month <- strftime(df$creation_time, "%Y-%m")
+
+
+```
+
+
+```{r echo=FALSE}
+### Step 3
+# Aggregate dates of the posts to do a count
+# posts 
+
+#count total topics
+total_topic_daily <- count(df, "creation_time")
+total_topic_month <- count(df, "creation_month")
+names(total_topic_daily)[2] <- 'total_topics'
+names(total_topic_month)[2] <- 'total_topics'
+
+#count total replies
+total_topicreplies_daily <- aggregate(total_comments~creation_time,df,sum)
+total_topicreplies_month <- aggregate(total_comments~creation_month,df,sum)
+names(total_topicreplies_month)[2] <- 'total_topiccomments'
+
+#count total topic view
+total_topicview_daily <- aggregate(total_views~creation_time,df,sum)
+total_topicview_month <- aggregate(total_views~creation_month,df,sum)
+names(total_topicview_month)[2] <- 'total_topicviews'
+
+
+summary_topics_daily <- merge(x = total_topicreplies_daily, y = total_topicview_daily, by = "creation_time", all = TRUE)
+summary_topics_daily <- merge(x = total_topic_daily, y = summary_topics_daily, by = "creation_time", all = TRUE)
+
+summary_topics_monthly <- merge(x = total_topicreplies_month, y = total_topicview_month, by = "creation_month", all = TRUE)
+summary_topics_monthly <- merge(x = total_topic_month, y = summary_topics_monthly, by = "creation_month", all = TRUE)
+
+
+```
+
+### Summary
+```{r echo=FALSE}
+
+avg_topics <- format(mean(summary_topics_monthly[["total_topics"]]),2)
+avg_topicviews <- format(mean(summary_topics_monthly[["total_topicviews"]]),2)
+avg_topiccomments <- format(mean(summary_topics_monthly[["total_topiccomments"]]),2)
+
+#log_avg_pageviews <- log2(avg_pageviews)
+print(cat(paste0("Average topic: ", avg_topics,"\n","Average topic replies: ", avg_topiccomments,"\n","Average topic views: ", avg_topicviews,"\n")))
+```
+
+```{r echo=FALSE}
+### Step 4
+#Do plot for login
+
+p <- qplot(creation_time, total_topics, data=summary_topics_daily, geom=c("point", "smooth"), main="Total Topics",  xlab="month", ylab="#Topic")
+print(p)
+
+q <- qplot(creation_time, total_comments, data=summary_topics_daily, geom=c("point", "smooth"), main="Total Topics Comments",  xlab="month", ylab="#Topic Comments")
+print(q)
+
+r <- qplot(creation_time, total_views, data=summary_topics_daily, geom=c("point", "smooth"), main="Total Topics Views",  xlab="month", ylab="#Topic View")
+print(r)
+
+```
+
+```{r echo=FALSE}
+
+print(summary_topics_monthly)
+#print(summary_topics_daily)
+
+```
