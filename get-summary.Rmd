@@ -91,7 +91,6 @@ total_topic_solved_month <- count(df1, "creation_month")
 names(total_topic_solved_daily)[2] <- 'total_topic_solved'
 names(total_topic_solved_month)[2] <- 'total_topic_solved'
 
-
 #count total topic type discussion
 df1 <- subset(df,topic_type=="")
 total_topic_discussion_daily <- count(df1, "creation_time")
@@ -99,19 +98,36 @@ total_topic_discussion_month <- count(df1, "creation_month")
 names(total_topic_discussion_daily)[2] <- 'total_topic_discussion'
 names(total_topic_discussion_month)[2] <- 'total_topic_discussion'
 
+#count total topic status visible
+df1 <- subset(df,topic_status=="visible")
+total_topic_visible_daily <- count(df1, "creation_time")
+total_topic_visible_month <- count(df1, "creation_month")
+names(total_topic_visible_daily)[2] <- 'total_topic_visible'
+names(total_topic_visible_month)[2] <- 'total_topic_visible'
+ 
+#count total topic status visible
+df1 <- subset(df,topic_status=="trashed")
+total_topic_trashed_daily <- count(df1, "creation_time")
+total_topic_trashed_month <- count(df1, "creation_month")
+names(total_topic_trashed_daily)[2] <- 'total_topic_trashed'
+names(total_topic_trashed_month)[2] <- 'total_topic_trashed'
+
 #merge all tables
 summary_topics_daily <- merge(x = total_topicreplies_daily, y = total_topicview_daily, by = "creation_time", all = TRUE)
 summary_topics_daily <- merge(x = total_topic_daily, y = summary_topics_daily, by = "creation_time", all = TRUE)
 summary_topics_daily <- merge(x = total_topic_question_daily, y = summary_topics_daily, by = "creation_time", all = TRUE)
 summary_topics_daily <- merge(x = total_topic_solved_daily, y = summary_topics_daily, by = "creation_time", all = TRUE)
 summary_topics_daily <- merge(x = total_topic_discussion_daily, y = summary_topics_daily, by = "creation_time", all = TRUE)
+summary_topics_daily <- merge(x = total_topic_visible_daily, y = summary_topics_daily, by = "creation_time", all = TRUE)
+summary_topics_daily <- merge(x = total_topic_trashed_daily, y = summary_topics_daily, by = "creation_time", all = TRUE)
 
 summary_topics_monthly <- merge(x = total_topicreplies_month, y = total_topicview_month, by = "creation_month", all = TRUE)
 summary_topics_monthly <- merge(x = total_topic_month, y = summary_topics_monthly, by = "creation_month", all = TRUE)
 summary_topics_monthly <- merge(x = total_topic_question_month, y = summary_topics_monthly, by = "creation_month", all = TRUE)
 summary_topics_monthly <- merge(x = total_topic_solved_month, y = summary_topics_monthly, by = "creation_month", all = TRUE)
 summary_topics_monthly <- merge(x = total_topic_discussion_month, y = summary_topics_monthly, by = "creation_month", all = TRUE)
-
+summary_topics_monthly <- merge(x = total_topic_visible_month, y = summary_topics_monthly, by = "creation_month", all = TRUE)
+summary_topics_monthly <- merge(x = total_topic_trashed_month, y = summary_topics_monthly, by = "creation_month", all = TRUE)
 
 #replace NA value with 0, so that we can still count properly
 summary_topics_daily[is.na(summary_topics_daily)] <- 0
@@ -129,9 +145,20 @@ avg_topiccomment <- format(mean(summary_topics_monthly[["total_topiccomments"]])
 avg_topicquestion <- format(mean(summary_topics_monthly[["total_topic_question"]]),2)
 avg_topicsolved <- format(mean(summary_topics_monthly[["total_topic_solved"]]),2)
 avg_topicdiscussion <- format(mean(summary_topics_monthly[["total_topic_discussion"]]),2)
+avg_topicvisible <- format(mean(summary_topics_monthly[["total_topic_visible"]]),2)
+avg_topictrashed <- format(mean(summary_topics_monthly[["total_topic_trashed"]]),2)
+
+# ratio of solved question compared to all questions asked in the community
+ratio_topicsolvedquestion <- format(mean(summary_topics_monthly[["total_topic_solved"]]/(summary_topics_monthly[["total_topic_question"]]+summary_topics_monthly[["total_topic_solved"]])),2)
+
+ratio_topictrashedtopics <- format(mean(summary_topics_monthly[["total_topic_trashed"]]/summary_topics_monthly[["total_topics"]]),2)
+
 
 #log_avg_pageviews <- log2(avg_pageviews)
-print(cat(paste0("Average topic: ", avg_topic,"\n","Average topic question: ", avg_topicquestion,"\n","Average topic solved: ", avg_topicsolved,"\n","Average topic discussion: ", avg_topicdiscussion,"\n","Average topic replies: ", avg_topiccomment,"\n","Average topic views: ", avg_topicview,"\n")))
+print(cat(paste0("Average topic (month):", avg_topic,"\n","Average topic question (month): ", avg_topicquestion,"\n","Average topic solved (month): ", avg_topicsolved,"\n","Average topic discussion (month): ", avg_topicdiscussion,"\n","Average topic replies (month): ", avg_topiccomment,"\n","Average topic views (month): ", avg_topicview,"\n","Average topic visible (month): ", avg_topicvisible,"\n","Average topic trashed (month): ", avg_topictrashed,"\n")))
+
+print(cat(paste0("Ratio of solved questions:", ratio_topicsolvedquestion,"\n","Ratio of trashed topics:", ratio_topictrashedtopics,"\n")))
+
 ```
 
 ```{r echo=FALSE}
@@ -155,8 +182,9 @@ print(summary_topics_monthly)
 #print(summary_topics_daily)
 
 #write dataframe in csv file
-outputfile <- paste0("data/",envname,"_summary_topics_monthly_",daterange,".csv")
-print(outputfile)
-write.csv(summary_topics_monthly, file = outputfile)
+outputfile1 <- paste0("data/",envname,"_summary_topics_monthly_",daterange,".csv")
+outputfile2 <- paste0("data/",envname,"_summary_topics_daily_",daterange,".csv")
+write.csv(summary_topics_monthly, file = outputfile1)
+write.csv(summary_topics_daily, file = outputfile2)
 
 ```
