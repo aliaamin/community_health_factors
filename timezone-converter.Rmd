@@ -4,21 +4,10 @@ output: html_document
 ---
 
 ```{r echo = FALSE, message=F, warning=F}
-require(ggplot2)
-library(ggplot2)
-library(plyr)
-library(splines)
-#require(quantmod)
-```
 
-
-```{r echo=FALSE}
-#Read Summary
-
+#load file
 filename <- "vgz-nl_topic_daterange_20150101_20161007_created20161008_204417.csv"
 typeOfAnalysis <- "Topics"
-
-
 
 p <- regexpr('[a-zA-Z]*-[a-zA-Z]{2}', filename)
 d <- regexpr('[0-9]{8}_[0-9]{8}', filename)
@@ -26,45 +15,31 @@ envname <- regmatches(filename, p)
 daterange <- regmatches(filename, d)
 docpath <- paste0("data/",filename)
 
+print(cat(paste0("Environment name: ",envname,"\n","Date range: ",daterange,"\n","\n","Filename: ",filename,"\n","Analysis type: ", typeOfAnalysis,"\n")))
 
 ```
-
 
 ### Data Loaded
 ```{r echo=FALSE}
-
-print(cat(paste0("Environment name: ",envname,"\n","Date range: ",daterange,"\n","\n","Filename: ",filename,"\n","Analysis type: ", typeOfAnalysis,"\n")))
-```
-
-```{r echo=FALSE}
-
 #read file
 df <- read.csv(docpath, stringsAsFactors=FALSE)
-
+#print(head(df))
 ```
-
 
 ```{r echo=FALSE}
 ### Step 2
-# Read creation data, and add new column, containing only month and year
-
-df[ , "creation_time"] <- df["date_creation"]
 
 t3 <- df$date_creation
-df[ , "creation_time"] <- as.POSIXct(t3, tz="Europe/Amsterdam", format="%d-%m-%Y %H:%M:%OS")
-
-df[ , "creation_time_us"] <- format(df[ , "creation_time"], tz="US/Pacific")
-#print(t1)
+df[ , "creation_time_CET"] <- as.POSIXct(t3, tz="Europe/Amsterdam", format="%d-%m-%Y %H:%M:%OS")
+df[ , "creation_time_PST"] <- format(df[ , "creation_time_CET"], tz="US/Pacific")
 print(head(df))
 ```
 
 
 ```{r echo=FALSE}
 
-#print(testdf)
-
 #write dataframe in csv file
-#outputfile1 <- paste0("data/","US_",filename)
-#write.csv(df, file = outputfile1)
+outputfile1 <- paste0("data/","US_",filename)
+write.csv(df, file = outputfile1)
 
 ```
