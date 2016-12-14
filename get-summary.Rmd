@@ -15,7 +15,7 @@ require(quantmod)
 ```{r echo=FALSE}
 #Read Summary
 
-filename <- "simyo-nl_topic_daterange_20151001_20161007_created20161008_134547.csv"
+filename <- "tomtom-en_topic_daterange_20151101_20160928_created20160929_131249.csv"
 typeOfAnalysis <- "Topics"
 
 
@@ -48,7 +48,7 @@ df <- read.csv(docpath, stringsAsFactors=FALSE)
 ### Step 2
 # Read creation data, and add new column, containing only month and year
 
-df[ , "creation_time"] <- df["date_creation"]
+ 
 df$creation_time <- as.Date(df$creation_time, format = "%d-%m-%Y")
 df$creation_month <- strftime(df$creation_time, "%Y-%m")
 
@@ -157,7 +157,7 @@ ratio_topictrashedtopics <- format(mean(summary_topics_monthly[["total_topic_tra
 #log_avg_pageviews <- log2(avg_pageviews)
 print(cat(paste0("Average topic (month):", avg_topic,"\n","Average topic question (month): ", avg_topicquestion,"\n","Average topic solved (month): ", avg_topicsolved,"\n","Average topic discussion (month): ", avg_topicdiscussion,"\n","Average topic replies (month): ", avg_topiccomment,"\n","Average topic views (month): ", avg_topicview,"\n","Average topic visible (month): ", avg_topicvisible,"\n","Average topic trashed (month): ", avg_topictrashed,"\n")))
 
-print(cat(paste0("Ratio of solved questions:", ratio_topicsolvedquestion,"\n","Ratio of trashed topics:", ratio_topictrashedtopics,"\n")))
+print(cat(paste0("Ratio of solved questions: ", ratio_topicsolvedquestion,"\n","Ratio of trashed topics: ", ratio_topictrashedtopics,"\n")))
 
 ```
 

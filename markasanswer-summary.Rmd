@@ -1,0 +1,71 @@
+---
+title: "Community Health Stats"
+output: html_document
+---
+
+```{r echo = FALSE, message=F, warning=F}
+library(plyr)
+
+
+#load file
+filename <- "insidedhq-nl_markasanswernew_daterange_20151201_20160930_created20161001_173331.csv"
+typeOfAnalysis <- "Mark as answer"
+
+p <- regexpr('[a-zA-Z]*-[a-zA-Z]{2}', filename)
+d <- regexpr('[0-9]{8}_[0-9]{8}', filename)
+envname <- regmatches(filename, p)
+daterange <- regmatches(filename, d)
+docpath <- paste0("data/",filename)
+
+print(cat(paste0("Environment name: ",envname,"\n","Date range: ",daterange,"\n","\n","Filename: ",filename,"\n","Analysis type: ", typeOfAnalysis,"\n")))
+
+```
+
+### Status
+```{r echo=FALSE}
+#read file
+df <- read.csv(docpath, stringsAsFactors=FALSE)
+#print(head(df))
+```
+
+
+```{r echo=FALSE}
+### Step 2
+# Read creation data, and add new column, containing only month and year
+
+df$topic_answered_creationTime <- as.Date(df$post_answered_creationTime, format = "%d-%m-%Y")
+df$topic_answered_creation_month <- strftime(df$topic_answered_creationTime, "%Y-%m")
+
+#counting registered user
+
+df[ , "answered_by_registeredUser"] <- df$post_answered_userRole
+df[ , "answered_by_registeredUser"] <- grepl(".*roles.registered.*", df[ , "answered_by_registeredUser"],perl=TRUE)
+
+```
+
+
+```{r echo=FALSE}
+### Step 3
+#count total answered topics
+
+print(head(df,3))
+
+total_answeredtopic_daily <- count(df, "topic_answered_creationTime")
+total_answeredtopic_month <- count(df, "topic_answered_creation_month")
+total_answeredtopic_byRegisteredUser <- count(df, "answered_by_registeredUser")
+names(total_answeredtopic_daily)[2] <- 'total_answeredtopics'
+names(total_answeredtopic_month)[2] <- 'total_answeredtopics'
+
+
+```
+
+
+```{r echo=FALSE}
+
+#print(head(total_answeredtopic_daily))
+#print(head(total_answeredtopic_month))
+print(head(total_answeredtopic_byRegisteredUser))
+
+#print(cat(paste0("Total: ", head(total_answeredtopic_daily)))
+
+```
