@@ -8,7 +8,7 @@ library(plyr)
 
 
 #load file
-filename <- "insidedhq-nl_markasanswernew_daterange_20151201_20160930_created20161001_173331.csv"
+filename <- "telfort-nl_markasanswernew_daterange_20151001_20161007_created20161008_140910.csv"
 typeOfAnalysis <- "Mark as answer"
 
 p <- regexpr('[a-zA-Z]*-[a-zA-Z]{2}', filename)
@@ -48,23 +48,37 @@ df[ , "answered_by_registeredUser"] <- grepl(".*roles.registered.*", df[ , "answ
 ### Step 3
 #count total answered topics
 
-print(head(df,3))
+#print(head(df,5))
 
 total_answeredtopic_daily <- count(df, "topic_answered_creationTime")
 total_answeredtopic_month <- count(df, "topic_answered_creation_month")
-total_answeredtopic_byRegisteredUser <- count(df, "answered_by_registeredUser")
 names(total_answeredtopic_daily)[2] <- 'total_answeredtopics'
 names(total_answeredtopic_month)[2] <- 'total_answeredtopics'
 
+
+#count total answered topics byn registered users
+df_count <- df[, c("topic_answered_creationTime", "topic_answered_creation_month", "answered_by_registeredUser")]
+df_count2 <- df_count[df_count$answered_by_registeredUser == TRUE, ]
+total_answeredtopic_month_by_regUser <- count(df_count2, "topic_answered_creation_month")
+names(total_answeredtopic_month_by_regUser)[2] <- 'total_answeredtopics_by_regUser'
+
+
+#put all in one table
+summary_answeredtopics_monthly <- merge(x = total_answeredtopic_month, y = total_answeredtopic_month_by_regUser, by = "topic_answered_creation_month", all = TRUE)
+summary_answeredtopics_monthly[is.na(summary_answeredtopics_monthly)] <- 0
+
+
+summary_answeredtopics_monthly[ , "answered_topic_ratio"] <- round((summary_answeredtopics_monthly$total_answeredtopics_by_regUser/summary_answeredtopics_monthly$total_answeredtopics),2)
+
+
+print(summary_answeredtopics_monthly)
 
 ```
 
 
 ```{r echo=FALSE}
 
-#print(head(total_answeredtopic_daily))
-#print(head(total_answeredtopic_month))
-print(head(total_answeredtopic_byRegisteredUser))
+
 
 #print(cat(paste0("Total: ", head(total_answeredtopic_daily)))
 
